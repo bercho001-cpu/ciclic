@@ -7,7 +7,7 @@ Esta guía contiene la secuencia exacta de **prompts modulares** listos para ser
 ## 🗺️ Mapa de Fases de Construcción
 
 ```
-[FASE 1: Inicialización & Setup TDD]
+[FASE 1: Inicialización & Setup TDD con Playwright]
                │
                ▼
 [FASE 2: Capa de Dominio Pura (Value Objects con TDD)]
@@ -29,9 +29,9 @@ Esta guía contiene la secuencia exacta de **prompts modulares** listos para ser
 
 ## 📋 Secuencia de Prompts Listos para Ejecutar
 
-### 🟢 PROMPT 1 — Inicialización del Proyecto y Configuración de Vitest (TDD)
+### 🟢 PROMPT 1 — Inicialización del Proyecto y Configuración de Playwright Test (TDD)
 ```text
-Actúa como un arquitecto de software senior. Vamos a inicializar el proyecto "Ciclic" (calculador y gestor de costos de software web y mobile) con Next.js 15 (App Router), TypeScript y Vitest para TDD.
+Actúa como un arquitecto de software senior. Vamos a inicializar el proyecto "Ciclic" (calculador y gestor de costos de software web y mobile) con Next.js 15 (App Router), TypeScript y Playwright Test para TDD.
 
 Sigue las especificaciones en docs/03_tech_stack_and_supabase_guide.md:
 1. Crea la estructura de carpetas siguiendo Clean Architecture:
@@ -40,19 +40,19 @@ Sigue las especificaciones en docs/03_tech_stack_and_supabase_guide.md:
    - src/domain/ (value-objects, entities, aggregates, services, repositories)
    - src/application/ (use-cases, dtos)
    - src/infrastructure/ (supabase, repositories, adapters)
-   - src/tests/ (configuración y setup de tests)
-2. Configura vitest.config.ts y src/tests/setup.ts con soporte para happy-dom y alias de TypeScript (@/*).
-3. Añade los scripts en package.json para "test", "test:watch" y "test:coverage".
-4. Escribe una prueba de verificación simple para confirmar que Vitest y los alias funcionan correctamente.
+   - src/tests/ (pruebas de verificación y E2E)
+2. Configura playwright.config.ts con proyectos para "domain-and-unit" y "e2e-chromium", y soporte para alias de TypeScript (@/*).
+3. Añade los scripts en package.json para "test" (playwright test --project=domain-and-unit), "test:all" y "test:ui".
+4. Escribe una prueba de verificación simple en src/tests/sanity.spec.ts para confirmar que Playwright Test y los alias funcionan correctamente.
 ```
 
 ---
 
-### 🟢 PROMPT 2 — Dominio: Value Objects con TDD Estricto
+### 🟢 PROMPT 2 — Dominio: Value Objects con TDD Estricto (Playwright Test)
 ```text
 Siguiendo TDD estricto (Red -> Green -> Refactor), vamos a implementar los Value Objects centrales de Ciclic según docs/02_domain_driven_design_and_architecture.md y docs/05_tdd_strategy_and_test_specifications.md:
 
-1. Escribe primero las suites de prueba en Vitest para:
+1. Escribe primero las suites de prueba con @playwright/test para:
    - src/domain/value-objects/__tests__/money.spec.ts (redondeo a 2 decimales, suma/resta con misma moneda, rechazo de montos negativos, formato de moneda).
    - src/domain/value-objects/__tests__/estimation-hours.spec.ts (cálculo PERT (O+4M+P)/6, invariante Optimista <= Probable <= Pesimista).
    - src/domain/value-objects/__tests__/percentage.spec.ts (rango 0-100%, cálculo de tasas).
@@ -68,7 +68,7 @@ Siguiendo TDD estricto (Red -> Green -> Refactor), vamos a implementar los Value
 ```text
 Siguiendo TDD, vamos a implementar el motor de cálculo financiero en cascada y los agregados del dominio según docs/02_domain_driven_design_and_architecture.md y docs/05_tdd_strategy_and_test_specifications.md:
 
-1. Escribe los tests unitarios en Vitest para:
+1. Escribe los tests unitarios con @playwright/test para:
    - src/domain/services/__tests__/financial-calculation.service.spec.ts (cálculo en cascada: Mano de Obra + Costos Fijos puntuales/recurrentes + Contingencia + Margen de Ganancia + Impuestos).
    - src/domain/aggregates/__tests__/project.spec.ts (módulos, tareas PERT, congelamiento de snapshot de tarifas freezeSnapshots para inmutabilidad histórica).
    - src/domain/aggregates/__tests__/payment-plan.spec.ts (generación de cuotas 50/50, 30/40/30, distribución exacta de centavos, estados PARTIALLY_PAID y PAID al recibir recibos de cobro).

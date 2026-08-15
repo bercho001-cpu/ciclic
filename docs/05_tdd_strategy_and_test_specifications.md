@@ -20,35 +20,37 @@ En Ciclic, **ninguna lógica de negocio o cálculo monetario se implementa sin u
 
 ---
 
-## 2. Configuración del Entorno de Pruebas (Vitest)
+## 2. Configuración del Entorno de Pruebas (Playwright Test)
 
-Utilizamos **Vitest** por su velocidad instantánea, soporte nativo de TypeScript y compatibilidad total con `describe`/`it`/`expect`.
+Utilizamos **Playwright Test** (`@playwright/test`) como plataforma unificada tanto para las pruebas unitarias de dominio puro (ejecución ultrarrápida en Node.js/TypeScript) como para las pruebas E2E e interfaces de usuario.
 
-### Archivo de Configuración (`vitest.config.ts`):
+### Archivo de Configuración (`playwright.config.ts`):
 ```typescript
-import { defineConfig } from 'vitest/config';
-import react from '@vitejs/plugin-react';
-import path from 'path';
+import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
-  plugins: [react()],
-  test: {
-    environment: 'happy-dom',
-    globals: true,
-    setupFiles: ['./src/tests/setup.ts'],
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'json', 'html'],
-      lines: 90,
-      functions: 90,
-      branches: 85,
-    },
+  testDir: './src',
+  testMatch: /.*\.spec\.ts/,
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
+  reporter: 'list',
+  use: {
+    baseURL: 'http://localhost:3000',
+    trace: 'on-first-retry',
   },
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
+  projects: [
+    {
+      name: 'domain-and-unit',
+      testMatch: /.*\/domain\/.*\.spec\.ts|.*\/application\/.*\.spec\.ts|.*\/tests\/.*sanity\.spec\.ts/,
     },
-  },
+    {
+      name: 'e2e-chromium',
+      testMatch: /.*\/tests\/e2e\/.*\.spec\.ts/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+  ],
 });
 ```
 
@@ -65,11 +67,11 @@ export default defineConfig({
 - [ ] Debe multiplicar por un factor o porcentaje conservando el redondeo financiero estándar.
 
 ```typescript
-import { describe, it, expect } from 'vitest';
+import { test, expect } from '@playwright/test';
 import { Money } from '../money';
 
-describe('Value Object: Money', () => {
-  it('debe redondear y sumar sin error de punto flotante', () => {
+test.describe('Value Object: Money', () => {
+  test('debe redondear y sumar sin error de punto flotante', async () => {
     const m1 = Money.create(19.99, 'USD');
     const m2 = Money.create(10.01, 'USD');
     const result = m1.add(m2);
@@ -77,7 +79,7 @@ describe('Value Object: Money', () => {
     expect(result.currency).toBe('USD');
   });
 
-  it('debe rechazar montos negativos', () => {
+  test('debe rechazar montos negativos', async () => {
     expect(() => Money.create(-50, 'USD')).toThrow('El monto no puede ser negativo');
   });
 });
@@ -91,16 +93,16 @@ describe('Value Object: Money', () => {
 - [ ] Debe calcular correctamente el caso estándar (ej. $O=10, M=20, P=30 \implies (10 + 80 + 30)/6 = 20$ horas).
 
 ```typescript
-import { describe, it, expect } from 'vitest';
+import { test, expect } from '@playwright/test';
 import { EstimationHours } from '../estimation-hours';
 
-describe('Value Object: EstimationHours (PERT)', () => {
-  it('debe calcular las horas ponderadas correctamente', () => {
+test.describe('Value Object: EstimationHours (PERT)', () => {
+  test('debe calcular las horas ponderadas correctamente', async () => {
     const estimation = EstimationHours.create({ optimistic: 10, probable: 20, pessimistic: 30 });
     expect(estimation.calculatedHours).toBe(20);
   });
 
-  it('debe lanzar error de invariante si pesimista es menor que optimista', () => {
+  test('debe lanzar error de invariante si pesimista es menor que optimista', async () => {
     expect(() => EstimationHours.create({ optimistic: 50, probable: 20, pessimistic: 10 }))
       .toThrow('Invariante violada: Optimista <= Probable <= Pesimista');
   });
@@ -125,13 +127,13 @@ describe('Value Object: EstimationHours (PERT)', () => {
   - IVA 21%: $1,496.88 USD $\implies$ Total Final = $8,624.88 USD
 
 ```typescript
-import { describe, it, expect } from 'vitest';
+import { test, expect } from '@playwright/test';
 import { FinancialCalculationService } from '../financial-calculation.service';
 import { Money } from '../../value-objects/money';
 import { Percentage } from '../../value-objects/percentage';
 
-describe('Domain Service: FinancialCalculationService', () => {
-  it('debe calcular la liquidación completa del proyecto con precisión matemática en cascada', () => {
+test.describe('Domain Service: FinancialCalculationService', () => {
+  test('debe calcular la liquidación completa del proyecto con precisión matemática en cascada', async () => {
     const laborCost = Money.create(5000, 'USD');
     const externalCosts = Money.create(400, 'USD'); // $200 puntual + ($50 * 4) recurrente
     const contingency = Percentage.create(10);
@@ -166,12 +168,12 @@ describe('Domain Service: FinancialCalculationService', () => {
 - [ ] Debe calcular el balance total facturado, cobrado y pendiente.
 
 ```typescript
-import { describe, it, expect } from 'vitest';
+import { test, expect } from '@playwright/test';
 import { PaymentPlan } from '../payment-plan';
 import { Money } from '../../value-objects/money';
 
-describe('Aggregate: PaymentPlan (Penny Allocation & Partial Payments)', () => {
-  it('debe ajustar el centavo residual en cuotas con decimales periódicos', () => {
+test.describe('Aggregate: PaymentPlan (Penny Allocation & Partial Payments)', () => {
+  test('debe ajustar el centavo residual en cuotas con decimales periódicos', async () => {
     const total = Money.create(10000, 'USD');
     const plan = PaymentPlan.create({ projectId: 'p-1', totalAmount: total });
     
@@ -186,7 +188,7 @@ describe('Aggregate: PaymentPlan (Penny Allocation & Partial Payments)', () => {
     expect(sum).toBe(10000.00);
   });
 
-  it('debe transicionar estados de cuota a PARTIALLY_PAID y PAID según los cobros recibidos', () => {
+  test('debe transicionar estados de cuota a PARTIALLY_PAID y PAID según los cobros recibidos', async () => {
     const total = Money.create(1000, 'USD');
     const plan = PaymentPlan.create({ projectId: 'p-1', totalAmount: total });
     plan.generateEvenSplit(2); // 2 cuotas de $500

@@ -6,6 +6,10 @@ node_modules/
 
 # Testing & Coverage
 /coverage
+test-results/
+playwright-report/
+blob-report/
+
 
 # Next.js
 /.next/

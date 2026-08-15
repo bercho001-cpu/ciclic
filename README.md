@@ -2,7 +2,7 @@
 
 **Ciclic** es una plataforma web para estimación de costos, presupuestación modular, planes de pago fraccionados (cuotas/hitos) y control de flujo de caja para proyectos de desarrollo **Web** y **Mobile Apps**.
 
-Diseñado bajo principios de ingeniería de software robustos: **Domain-Driven Design (DDD)**, **Arquitectura Limpia**, **SOLID**, **DRY** y desarrollado mediante **Test-Driven Development (TDD)** con tecnologías 100% gratuitas (**Next.js 15**, **Supabase Free Tier**, **TypeScript**, **Vitest**).
+Diseñado bajo principios de ingeniería de software robustos: **Domain-Driven Design (DDD)**, **Arquitectura Limpia**, **SOLID**, **DRY** y desarrollado mediante **Test-Driven Development (TDD)** con tecnologías 100% gratuitas (**Next.js 15**, **Supabase Free Tier**, **TypeScript**, **Playwright**).
 
 ---
 

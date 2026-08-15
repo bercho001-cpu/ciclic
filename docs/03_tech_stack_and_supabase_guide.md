@@ -212,7 +212,7 @@ ciclic/
 │   │   └── repositories/
 │   └── tests/                    # Tests E2E y setup global
 ├── docs/                         # Documentación técnica
-├── vitest.config.ts              # Configuración de Vitest para TDD
+├── playwright.config.ts          # Configuración de Playwright para TDD y E2E
 └── package.json
 ```
 
