@@ -1,3 +1,9 @@
+-- Habilitar esquema auth y tabla users si no existen para que las migraciones locales/shadow pasen sin error de validación
+CREATE SCHEMA IF NOT EXISTS auth;
+CREATE TABLE IF NOT EXISTS auth.users (
+    id UUID PRIMARY KEY
+);
+
 -- ==============================================================================
 -- 1. TABLA: PROFILES (Perfil de Usuario y Branding de la Agencia/Consultor)
 -- ==============================================================================
