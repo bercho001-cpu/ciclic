@@ -61,7 +61,7 @@ SUPABASE_SERVICE_ROLE_KEY=tu-clave-service-role
 
 ### 3.2. Clientes Supabase para SSR y Cliente (Next.js App Router)
 
-Implementamos la arquitectura estándar recomendada por Supabase para Next.js con soporte de cookies y sesiones seguras:
+Implementamos la arquitectura estándar recomendada por Supabase para Next.js 15 con soporte de cookies y sesiones seguras:
 
 #### Cliente Navegador (`/src/infrastructure/supabase/client.ts`):
 ```typescript
@@ -111,13 +111,118 @@ export async function createServerSupabaseClient() {
 }
 ```
 
+### 3.3. Middleware de Autenticación y Refresco de Sesión (`/src/middleware.ts`)
+
+En Next.js 15, el middleware refresca los tokens de sesión de Supabase antes de cargar cualquier ruta y protege las secciones autenticadas (`/dashboard`, `/projects/*`, `/settings/*`), permitiendo acceso anónimo a `/login`, `/register` y propuestas públicas (`/view/proposal/*`).
+
+```typescript
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { NextResponse, type NextRequest } from 'next/server';
+
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value;
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          request.cookies.set({ name, value, ...options });
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          });
+          response.cookies.set({ name, value, ...options });
+        },
+        remove(name: string, options: CookieOptions) {
+          request.cookies.set({ name, value: '', ...options });
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          });
+          response.cookies.set({ name, value: '', ...options });
+        },
+      },
+    }
+  );
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // Rutas públicas que no requieren autenticación
+  const isPublicRoute = 
+    request.nextUrl.pathname.startsWith('/login') ||
+    request.nextUrl.pathname.startsWith('/register') ||
+    request.nextUrl.pathname.startsWith('/auth') ||
+    request.nextUrl.pathname.startsWith('/view/proposal');
+
+  if (!user && !isPublicRoute && request.nextUrl.pathname !== '/') {
+    return NextResponse.redirect(new URL('/login', request.url));
+  }
+
+  return response;
+}
+
+export const config = {
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+};
+```
+
 ---
 
-## 4. Motor de Exportación de Cotizaciones a Costo Cero
+## 4. Estructura de Directorios del Proyecto (Clean Architecture + App Router)
+
+```text
+ciclic/
+├── src/
+│   ├── app/                      # Next.js 15 App Router (Páginas, Layouts, Server Actions)
+│   │   ├── (auth)/               # Rutas de autenticación (/login, /register)
+│   │   ├── (dashboard)/          # Rutas protegidas (/dashboard, /projects, /settings)
+│   │   │   ├── dashboard/
+│   │   │   ├── projects/
+│   │   │   │   ├── new/
+│   │   │   │   └── [id]/
+│   │   │   └── settings/
+│   │   │       ├── rates/
+│   │   │       └── profile/
+│   │   ├── view/                 # Rutas públicas (ej. /view/proposal/[shareToken])
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── components/               # Componentes UI reutilizables (Design System)
+│   ├── domain/                   # Capa de Dominio Pura (TypeScript)
+│   │   ├── aggregates/
+│   │   ├── entities/
+│   │   ├── value-objects/
+│   │   ├── services/
+│   │   └── repositories/
+│   ├── application/              # Capa de Aplicación (Use Cases, DTOs)
+│   │   ├── use-cases/
+│   │   └── dtos/
+│   ├── infrastructure/           # Capa de Infraestructura (Supabase, PDF, Adapters)
+│   │   ├── supabase/
+│   │   └── repositories/
+│   └── tests/                    # Tests E2E y setup global
+├── docs/                         # Documentación técnica
+├── vitest.config.ts              # Configuración de Vitest para TDD
+└── package.json
+```
+
+---
+
+## 5. Motor de Exportación de Cotizaciones a Costo Cero
 
 En lugar de utilizar servicios de renderizado de PDF en la nube que cobran por página (como DocRaptor o Puppeteer serverless que agotan memoria), Ciclic utiliza:
 
 1. **Generación Cliente con CSS `@media print`:**
    - Hoja de estilos dedicada para impresión limpia que genera PDFs vectoriales impecables directamente mediante el diálogo nativo del navegador (`window.print()`).
 2. **Generación con `@react-pdf/renderer` (Opcional):**
-   - Renderiza un documento PDF directamente en el cliente o servidor Node.js sin navegadores headless pesados.
+   - Renderiza un documento PDF directamente en el cliente o servidor Node.js sin dependencias pesadas de navegador headless.
