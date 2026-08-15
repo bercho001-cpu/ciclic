@@ -91,13 +91,12 @@ Vamos a implementar la capa de infraestructura conectada a Supabase (PostgreSQL 
 
 1. Configura los clientes de Supabase para SSR y Cliente navegador en src/infrastructure/supabase/ (client.ts y server.ts).
 2. Implementa el Middleware de Next.js 15 en src/middleware.ts para refrescar sesiones de Supabase y proteger rutas autenticadas, permitiendo acceso público a /login, /register y /view/proposal/*.
-3. Implementa los repositorios concretos con Supabase:
-   - src/infrastructure/repositories/supabase-project.repository.ts
-   - src/infrastructure/repositories/supabase-rate-card.repository.ts
-   - src/infrastructure/repositories/supabase-payment-plan.repository.ts
-   - src/infrastructure/repositories/supabase-profile.repository.ts
-   - src/infrastructure/repositories/supabase-module-template.repository.ts
-4. Crea implementaciones InMemory de estos repositorios para que las suites de tests de aplicación se ejecuten en memoria de forma instantánea sin Supabase.
+3. Implementa los repositorios concretos con Supabase como única fuente de persistencia:
+   - src/infrastructure/repositories/supabase/supabase-project.repository.ts
+   - src/infrastructure/repositories/supabase/supabase-payment-plan.repository.ts
+   - src/infrastructure/repositories/supabase/supabase-user-profile.repository.ts
+   - src/infrastructure/repositories/supabase/supabase-module-template.repository.ts
+   Nota: No se usan repositorios InMemory. Supabase es el único adaptador de persistencia.
 ```
 
 ---

@@ -1,10 +1,4 @@
-// Setup file for Vitest test environment
-import { beforeAll, afterEach } from 'vitest';
-
-beforeAll(() => {
-  // Global mocks or polyfills if needed
-});
-
-afterEach(() => {
-  // Clean up state
-});
+/**
+ * Global test setup for Playwright Test.
+ * Add any global mocks or polyfills here if needed.
+ */
