@@ -80,6 +80,13 @@ El problema principal que resuelve es la **subestimación de costos**, la falta 
 - **RF-6.3:** Exportación e importación en formato JSON para respaldos.
 - **RF-6.4:** Enlace Público Seguro para Clientes (`/view/proposal/[shareToken]`): Vista interactiva web donde el cliente puede consultar el alcance y descargar el PDF sin necesidad de iniciar sesión.
 
+### Épica 7: Páginas Comunes, Soporte y Descargos de Responsabilidad (Branding & Legal)
+- **RF-7.1 (Quiénes Somos / About Us):** Página estática pública (`/about`) que detalla la misión de Ciclic, su enfoque de ingeniería, de estimaciones PERT/WBS precisas y la historia/visión del proyecto.
+- **RF-7.2 (Página Legal / Terms & Privacy):** Página única (`/legal`) con los Términos de Servicio, la Política de Privacidad de Datos (protección bajo cookies de Supabase Auth) y descargos de responsabilidad sobre los presupuestos calculados.
+- **RF-7.3 (Página de Contacto / Support):** Formulario de contacto público (`/contact`) integrado opcionalmente con Supabase o servicio externo para recibir consultas de soporte, feedback o reporte de bugs.
+- **RF-7.4 (Descargo de Responsabilidad de Registro / Signup Disclaimer):** Pantalla de registro (`/register`) con aviso de consentimiento obligatorio que el usuario debe aceptar de forma explícita antes de crear su cuenta, indicando que las estimaciones son orientativas y de entera responsabilidad del profesional.
+- **RF-7.5 (Centro de Ayuda y FAQs - Recomendado):** Página pública (`/help`) que explica detalladamente cómo funcionan las estimaciones de tres puntos (PERT) y la modularización WBS para educar a los nuevos usuarios.
+
 ---
 
 ## 4. Requerimientos No Funcionales
